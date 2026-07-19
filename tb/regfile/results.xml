@@ -1,0 +1,10 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1783808765" />
+    <testcase name="test_reset_clears_all_regs" classname="test_regfile" file="/home/ayanna/projects/riscv-cordic/tb/regfile/test_regfile.py" lineno="21" time="0.0008859634399414062" sim_time_ns="20.0" ratio_time="22574.294940796557" />
+    <testcase name="test_x0_always_reads_zero" classname="test_regfile" file="/home/ayanna/projects/riscv-cordic/tb/regfile/test_regfile.py" lineno="33" time="0.0003364086151123047" sim_time_ns="40.0" ratio_time="118903.01913536499" />
+    <testcase name="test_write_then_read" classname="test_regfile" file="/home/ayanna/projects/riscv-cordic/tb/regfile/test_regfile.py" lineno="49" time="0.00023102760314941406" sim_time_ns="39.99999999999999" ratio_time="173139.48400412794" />
+    <testcase name="test_two_reads_simultaneously" classname="test_regfile" file="/home/ayanna/projects/riscv-cordic/tb/regfile/test_regfile.py" lineno="68" time="0.0002720355987548828" sim_time_ns="49.999999999999986" ratio_time="183799.47414548637" />
+    <testcase name="test_write_disabled_when_we_low" classname="test_regfile" file="/home/ayanna/projects/riscv-cordic/tb/regfile/test_regfile.py" lineno="100" time="0.0002779960632324219" sim_time_ns="40.0" ratio_time="143886.9296740995" />
+  </testsuite>
+</testsuites>
