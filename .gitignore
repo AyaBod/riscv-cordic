@@ -3,16 +3,16 @@ sim_build/
 obj_dir/
 *.vcd
 *.fst
- 
+
 # cocotb
 results.xml
 __pycache__/
 *.pyc
 .pytest_cache/
- 
-# Python venv (if it lives inside the repo, like yours does)
+
+# Python venv
 venv/
- 
+
 # Quartus (for later phases)
 *.qws
 *.qdf
@@ -20,5 +20,3 @@ db/
 incremental_db/
 output_files/
 greybox_tmp/
- 
- 

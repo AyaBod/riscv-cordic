@@ -18,22 +18,18 @@ ALU_SLTU = 0b1001
 @cocotb.test()
 async def test_add(dut):
     """Basic ADD, including a case that overflows 32 bits (check wraparound)."""
-    # TODO: drive operand_a, operand_b, alu_op = ALU_ADD (0b0000)
     dut.operand_a.value = 0b0001
     dut.operand_b.value = 0b0001
     dut.alu_op.value = ALU_ADD
-    # TODO: await Timer(1, unit="ns")
     await Timer(1, unit="ns")
-    # TODO: assert result == expected sum
     assert int(dut.result.value) == 2, f"expected 2, got {dut.result.value.integer}"
-    # bonus: try operand_a = 0xFFFFFFFF, operand_b = 1 -- what SHOULD wrap to?
+
     pass
 
 
 @cocotb.test()
 async def test_sub_producing_negative(dut):
     """SUB where result is negative -- check two's complement representation."""
-    # TODO: e.g. operand_a = 5, operand_b = 10 -- result should be 0xFFFFFFFB (-5 in two's complement)
     dut.operand_a.value = 5
     dut.operand_b.value = 10
     dut.alu_op.value = ALU_SUB
@@ -45,9 +41,6 @@ async def test_sub_producing_negative(dut):
 @cocotb.test()
 async def test_bitwise_ops(dut):
     """AND, OR, XOR with a pattern that would catch a logical/bitwise mixup."""
-    # TODO: pick operand_a/b where bitwise vs logical AND/OR would give DIFFERENT
-    # results -- e.g. two nonzero values that aren't simply 0/1.
-    # if AND used && by mistake, what would result be instead of the correct value?
     dut.operand_a.value = 0b0101
     dut.operand_b.value = 0b0011
     
@@ -68,11 +61,7 @@ async def test_bitwise_ops(dut):
 
 @cocotb.test()
 async def test_shifts(dut):
-    """SLL, SRL, SRA -- include shift-by-0, shift-by-31, and shift amount > 31 in operand_b."""
-    # TODO: SLL/SRL/SRA each need their own check
-    # TODO: specifically test operand_b with garbage in bits above [4:0]
-    # (e.g. operand_b = 32'hFFFFFFE1 -- lower 5 bits = 1, upper bits garbage)
-    # to prove your slicing actually works
+    """SLL, SRL, SRA include shift-by-0, shift-by-31, and shift amount > 31 in operand_b."""
     dut.operand_a.value = 0x80000003 #0011
     dut.operand_b.value = 0xFFFFFFE0 #zero shift
     dut.alu_op.value = ALU_SLL
@@ -97,11 +86,6 @@ async def test_shifts(dut):
 @cocotb.test()
 async def test_sra_sign_extension(dut):
     """SRA specifically needs a NEGATIVE operand_a to prove sign-extension works."""
-    # TODO: operand_a = 0x80000000 (most negative 32-bit value), shift right arithmetic
-    # by some amount, check the upper bits fill with 1, not 0
-    # TODO: also test SRL with the same operand_a -- should fill with 0 instead
-    # this pair is the actual proof that your signed cast is doing its job
-
     dut.operand_a.value = 0x80000000
     dut.operand_b.value = 0xFFFFFFE1
     dut.alu_op.value = ALU_SRA
@@ -117,14 +101,7 @@ async def test_sra_sign_extension(dut):
 
 @cocotb.test()
 async def test_slt_vs_sltu(dut):
-    """The critical case: SLT and SLTU must DIVERGE on this input."""
-    # TODO: pick operand_a/b where one is 'negative' as signed but a huge
-    # positive number as unsigned -- e.g. operand_a = 0xFFFFFFFF (-1 signed,
-    # 4294967295 unsigned), operand_b = 1
-    # SLT(operand_a, operand_b) should be TRUE (-1 < 1)
-    # SLTU(operand_a, operand_b) should be FALSE (4294967295 is not < 1)
-    # if your ALU had the signed-cast bug from earlier, this test would catch it
-
+    """SLT and SLTU must diverge on this input."""
     dut.operand_a.value = 0xFFFFFFFF
     dut.operand_b.value = 0x00000001
 
@@ -142,9 +119,6 @@ async def test_slt_vs_sltu(dut):
 @cocotb.test()
 async def test_zero_flag(dut):
     """Confirm the zero output correctly reflects result == 0."""
-    # TODO: e.g. SUB with operand_a == operand_b -> result 0, zero should be 1
-    # TODO: any op producing nonzero -> zero should be 0
-
     dut.operand_a.value = 5
     dut.operand_b.value = 5
     dut.alu_op.value = ALU_SUB
@@ -161,9 +135,6 @@ async def test_zero_flag(dut):
 @cocotb.test()
 async def test_default_case(dut):
     """Undefined alu_op encoding should hit your default branch, not latch."""
-    # TODO: drive alu_op = 0b1111 (unused encoding)
-    # TODO: check result == 0 (or whatever your default produces) --
-    # this proves you don't have the latch-inference bug
     dut.operand_a.value = 5
     dut.operand_b.value = 5
     dut.alu_op.value = 0b1111
