@@ -29,7 +29,7 @@ module control (
             7'b0110111: begin
                 reg_write = 1;
                 alu_src = 1;
-                alu_op = 4'b1001; //custom lui/pass imm op
+                alu_op = 4'b0000; //custom lui/pass imm op
             end
             //lui U     
             7'b0010111: begin
