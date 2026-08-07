@@ -7,7 +7,8 @@ VERILOG_SOURCES = /home/ayanna/projects/riscv-cordic/src/imem.sv \
                   /home/ayanna/projects/riscv-cordic/src/regfile.sv \
                   /home/ayanna/projects/riscv-cordic/src/alu.sv \
                   /home/ayanna/projects/riscv-cordic/src/dmem.sv \
-                  /home/ayanna/projects/riscv-cordic/src/core_top.sv
+                  /home/ayanna/projects/riscv-cordic/src/core_top.sv \
+                  /home/ayanna/projects/riscv-cordic/src/cordic.sv
 
 TOPLEVEL = core_top
 MODULE = test_core_top

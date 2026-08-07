@@ -2,7 +2,7 @@ module cordic #(
     parameter int WIDTH = 16,      // fixed-point width
     parameter int FRAC_BITS = 13,  //Q format range vs precision tradeoff
     //^^^out of 16 total bits, 1 bit is for the sign, 2 bits are for the whole integer, and 13 bits are dedicated to the fractional precision
-    parameter int ITERATIONS = 12  //iteration count affects precision/latency tradeoff
+    parameter [3:0] ITERATIONS = 12  //iteration count affects precision/latency tradeoff
     //^^Running 12 iterations means it'll run 12 micro-rotations; more iterations equal higher accuracy, but cost more clock cycles
 ) (
     input logic clk,
@@ -17,7 +17,8 @@ module cordic #(
     output logic signed [WIDTH-1:0] x_out,
     output logic signed [WIDTH-1:0] y_out,
     output logic signed [WIDTH-1:0] z_out,
-    output logic done
+    output logic done,
+    output logic busy
 );
 
 
@@ -146,6 +147,7 @@ module cordic #(
     assign scaled_y_long = reg_y * INV_GAIN;
 
     assign done = (state == DONE);
+    assign busy = (state != IDLE); //stall must hold through done too
 
     always_comb begin
         if (mode == 1'b1) begin

@@ -10,6 +10,8 @@ module core_top #(
     localparam logic [6:0] OPC_JAL   = 7'b1101111;
     localparam logic [6:0] OPC_JALR  = 7'b1100111;
 
+    localparam logic [6:0] OPC_CUSTOM0 = 7'b0001011;  //RV32I reserved custom-0 opcode
+
 
     // pc registers
     logic [31:0] pc_current;
@@ -33,6 +35,8 @@ module core_top #(
     //instruction fetch
     logic [31:0] instruction;   //when will we assgin if instr is from init file
 
+    
+
     imem #(
         .INIT_FILE (IMEM_INIT_FILE)
     ) u_imem (
@@ -53,6 +57,33 @@ module core_top #(
     assign funct3 = instruction[14:12];
     assign funct7 = instruction[31:25];
 
+    //cordic implementation
+    logic cordic_op;
+    assign cordic_op = (opcode == OPC_CUSTOM0);
+
+    logic cordic_busy, cordic_done;
+    logic signed [15:0] cordic_x_out, cordic_y_out, cordic_z_out;
+
+    logic cordic_start;
+    assign cordic_start = cordic_op && !cordic_busy;  //will pulse exactly once on issue
+
+    logic core_stall;
+    assign core_stall = cordic_op && !cordic_done;    //held through entire op, drops on done
+    
+    cordic u_cordic (
+        .clk(clk),
+        .rst_n(rst_n),
+        .start(cordic_start),
+        .mode_in(funct3[0]),          //funct3[0]: 1=rotation, 0=vectoring (placeholder encoding)
+        .x_in(rs1_data[15:0]),
+        .y_in(rs2_data[15:0]),
+        .z_in(16'h0000),  //placeholder until encoding gives third operand source (can only compute cos0 and sin0)
+        .x_out(cordic_x_out),
+        .y_out(cordic_y_out),
+        .z_out(cordic_z_out),
+        .done(cordic_done),
+        .busy(cordic_busy)
+    );
 
     //control
     logic reg_write, alu_src, mem_read, mem_write, mem_to_reg, is_branch, is_jump;
@@ -96,7 +127,7 @@ module core_top #(
         .rs2_data(rs2_data)
     );
 
-    assign rd_we = reg_write; //place holder for writeback
+    assign rd_we = cordic_op ? cordic_done : reg_write;
 
     //alu op muxing
     logic [31:0] operand_a, operand_b;
@@ -147,7 +178,9 @@ module core_top #(
     assign pc_jalr_target = alu_result & ~32'h1; //clear LSB per spec
 
     always_comb begin
-        if (is_jump && opcode == OPC_JALR)
+        if (core_stall)
+            pc_next = pc_current; //hold pc in place while cordic is cycling
+        else if (is_jump && opcode == OPC_JALR)
             pc_next = pc_jalr_target;
         else if (is_jump) //jal
             pc_next = pc_jal_target;
@@ -156,6 +189,8 @@ module core_top #(
         else 
             pc_next = pc_plus4;
     end
+
+
 
     // data memory
     logic [31:0] mem_read_data;
@@ -172,22 +207,31 @@ module core_top #(
 
     //writeback mux
     always_comb begin
-    case (opcode)
-        //JAL and JALR explicitly write back the sequential link target (PC+4)
-        7'b1101111, 
-        7'b1100111: begin
-            rd_wdata = pc_plus4;
-        end
-        
-        //load instructions explicitly write back aligned memory data
-        7'b0000011: begin
-            rd_wdata = mem_read_data;
-        end
-        
-        //regular ALU ops, LUI, and AUIPC write back the ALU math stream
-        default: begin
-            rd_wdata = alu_result;
-        end
-    endcase
-end
+        case (opcode)
+            //JAL and JALR explicitly write back the sequential link target (PC+4)
+            7'b1101111, 
+            7'b1100111: begin
+                rd_wdata = pc_plus4;
+            end
+            
+            //load instructions explicitly write back aligned memory data
+            7'b0000011: begin
+                rd_wdata = mem_read_data;
+            end
+
+            OPC_CUSTOM0: begin
+                //sign-extend 16-bit cordic result back up to 32 bits
+                //mode selects which output field is the "primary" result:
+                //rotation -> x_out (cos); vectoring -> x_out (magnitude) as well,
+                rd_wdata = {{16{cordic_x_out[15]}}, cordic_x_out}; 
+            end
+            
+            //regular ALU ops, LUI, and AUIPC write back the ALU math stream
+            default: begin
+                rd_wdata = alu_result;
+            end
+        endcase
+    end
+
+
 endmodule

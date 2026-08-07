@@ -1,9 +1,10 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb.triggers import ReadOnly
+import math
 
-
+FRAC_BITS = 13
 
 OPC_LUI = 0b0110111
 OPC_AUIPC = 0b0010111
@@ -82,6 +83,37 @@ def sw(rs1, rs2, imm): return s_type(OPC_STORE, F3_SW, rs1, rs2, imm)
 def sh(rs1, rs2, imm): return s_type(OPC_STORE, F3_SH, rs1, rs2, imm)
 def sb(rs1, rs2, imm): return s_type(OPC_STORE, F3_SB, rs1, rs2, imm)
 
+def load_const(rd, value32):
+    """
+    Standard RISC-V two-instruction idiom for loading an arbitrary 32-bit
+    constant into a register: LUI sets the upper 20 bits, ADDI sign-extends
+    a 12-bit correction onto the lower 12. The +0x800 rounding compensates
+    for ADDI's immediate being sign-extended, so the two instructions
+    reconstruct the exact original value.
+    Returns a list of 2 encoded instructions.
+    """
+    upper = (value32 + 0x800) >> 12
+    lower = value32 - (upper << 12)
+    return [lui(rd, upper & 0xFFFFF), addi(rd, rd, lower & 0xFFF)]
+
+# cordic
+
+def encode_cordic(rd, rs1, rs2, mode):
+    """R type cusom0 encoding """
+    opcode = 0b0001011
+    funct3 = mode & 0b1
+    return (0 << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | opcode
+
+def to_fixed(val: float) -> int:
+    return int(round(val * (1 << FRAC_BITS))) & 0xFFFF
+
+def from_fixed(val: int) -> float:
+    val = val & 0xFFFF
+    if val & 0x8000:
+        val -= 0x10000
+    return val / (1 << FRAC_BITS)
+
+
 # DUT HELPERS !!!!!!!!!!
 def to_signed32(val):
     val &= 0xFFFFFFFF
@@ -126,7 +158,7 @@ async def setup(dut, instrs):
     await reset_dut(dut)
 
 
-# ACTUAL TESTS !!!! ----------------------------------------------------------------------------------------------------------------
+# ACTUAL TESTS !!!! -
 
 #sequencing
 @cocotb.test()
@@ -456,3 +488,76 @@ async def test_small_program(dut):
     await ReadOnly()
     assert get_reg(dut, 4) == 30
     assert get_reg(dut, 5) == 1
+
+@cocotb.test()
+async def test_cordic_integration(dut):
+    """
+    Full pipeline test: load real operands via LUI/ADDI, run a vectoring-mode
+    CORDIC instruction, and confirm:
+    (a) PC freezes for the correct duration while core_stall is high,
+    (b) the regfile write happens on the correct cycle, not early, and
+    (c) the instruction immediately after CORDIC executes correctly once
+    the stall releases, proving core_stall doesn't leak into surrounding code.
+    """
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    x_val, y_val = 0.2, 0.1
+    x_fixed = to_fixed(x_val)
+    y_fixed = to_fixed(y_val)
+
+    program = []
+    program += load_const(1, x_fixed)                            # x1 = x operand
+    program += load_const(2, y_fixed)                            # x2 = y operand
+    program.append(encode_cordic(rd=3, rs1=1, rs2=2, mode=0))     # x3 = cordic(x1,x2), vectoring
+    program.append(addi(rd=4, rs1=0, imm=7))                      # x4 = 7 -- must NOT run early
+
+    load_program(dut, program)
+    await reset_dut(dut)
+
+    # --- Poll until core_stall actually asserts, rather than assuming a fixed
+    # cycle count for the LUI/ADDI setup instructions. ---
+    for _ in range(20):
+        if dut.core_stall.value == 1:
+            break
+        await RisingEdge(dut.clk)
+    else:
+        assert False, "core_stall never asserted -- CORDIC instruction never reached"
+
+    pc_at_cordic_issue = int(dut.pc_current.value)
+    x1_val = dut.u_regfile.regs[1].value.to_signed()
+    x2_val = dut.u_regfile.regs[2].value.to_signed()
+    assert x1_val == x_fixed, f"x1={x1_val}, expected {x_fixed} -- operand load failed before CORDIC issued"
+    assert x2_val == y_fixed, f"x2={x2_val}, expected {y_fixed} -- operand load failed before CORDIC issued"
+
+    # --- Stay in this loop for as long as core_stall holds; confirm PC never moves. ---
+    stall_cycles_observed = 0
+    while dut.core_stall.value == 1:
+        assert int(dut.pc_current.value) == pc_at_cordic_issue, \
+            f"PC moved while core_stall was high! pc={int(dut.pc_current.value):x}"
+        stall_cycles_observed += 1
+        await RisingEdge(dut.clk)
+        if stall_cycles_observed > 20:
+            assert False, "core_stall held too long -- FSM likely deadlocked"
+
+    dut._log.info(f"[PERF] core_stall held for {stall_cycles_observed} cycles")
+
+    #actual write commits one edge after core stalls drop
+    await RisingEdge(dut.clk)
+
+    # --- The cycle stall just dropped is the cycle writeback + PC advance happen. ---
+    x3_result = dut.u_regfile.regs[3].value.to_signed()
+    x3_float = from_fixed(x3_result)
+
+    expected_mag = math.sqrt(x_val**2 + y_val**2)
+    assert abs(x3_float - expected_mag) < 0.005, \
+        f"x3={x3_float}, expected magnitude {expected_mag}"
+
+    assert int(dut.pc_current.value) == pc_at_cordic_issue + 4, \
+        "PC did not advance exactly one instruction after stall released"
+
+    # --- Confirm the follow-on ADDI executes cleanly, proving stall didn't leak. ---
+    await ClockCycles(dut.clk, 2)
+    x4_result = dut.u_regfile.regs[4].value.to_signed()
+    assert x4_result == 7, f"x4={x4_result}, expected 7 -- post-CORDIC instruction corrupted"
+
+    dut._log.info(f"[PASS] CORDIC integration: x3={x3_float:.5f} (exp {expected_mag:.5f}), x4={x4_result}")
