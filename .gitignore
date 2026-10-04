@@ -6,12 +6,16 @@ obj_dir/
 
 # cocotb
 results.xml
+sim.log
 __pycache__/
 *.pyc
 .pytest_cache/
 
 # Python venv
 venv/
+
+# sw build outputs
+sw/build/
 
 # Quartus (for later phases)
 *.qws
