@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read", "Edit", "Write",
+      "Bash(git status)", "Bash(git diff *)", "Bash(git diff)", "Bash(git log *)",
+      "Bash(git add *)", "Bash(git switch *)", "Bash(git checkout -b *)",
+      "Bash(make *)", "Bash(make)", "Bash(cp *)", "Bash(mkdir *)", "Bash(python3 *)"
+    ],
+    "ask": [
+      "Bash(git commit *)", "Bash(git push *)", "Bash(gh pr create *)"
+    ],
+    "deny": [
+      "Bash(rm *)", "Bash(git rm *)", "Bash(mv *)", "Bash(git clean *)",
+      "Bash(git reset --hard *)", "Bash(git restore *)", "Bash(git checkout -- *)",
+      "Bash(git push --force *)", "Bash(git push -f *)", "Bash(rmdir *)"
+    ]
+  }
+}
