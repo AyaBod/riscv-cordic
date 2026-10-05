@@ -9,9 +9,9 @@ ALU_OR = 0b0011
 ALU_XOR = 0b0100
 ALU_SLL = 0b0101
 ALU_SRL = 0b0110
-ALU_SRA = 0b0111 
+ALU_SRA = 0b0111
 ALU_SLT = 0b1000
-ALU_SLTU = 0b1001 
+ALU_SLTU = 0b1001
 
 
 
@@ -43,15 +43,15 @@ async def test_bitwise_ops(dut):
     """AND, OR, XOR with a pattern that would catch a logical/bitwise mixup."""
     dut.operand_a.value = 0b0101
     dut.operand_b.value = 0b0011
-    
+
     dut.alu_op.value = ALU_AND
     await Timer(1, unit="ns")
     assert dut.result.value == 0b0001, f"expected 0b0001, got {dut.result.value.binstr}" #.binstr to get binary value
-    
+
     dut.alu_op.value = ALU_OR
     await Timer(1, unit="ns")
     assert dut.result.value == 0b0111, f"expected 0b0111, got {dut.result.value.binstr}" #.binstr to get binary value
-    
+
     dut.alu_op.value = ALU_XOR
     await Timer(1, unit="ns")
     assert dut.result.value == 0b0110, f"expected 0b0110, got {dut.result.value.binstr}" #.binstr to get binary value
@@ -69,15 +69,15 @@ async def test_shifts(dut):
     assert dut.result.value == 0x80000003, f"expected 0x80000003, got {dut.result.value.binstr}"
 
     dut.operand_b.value = 0xFFFFFFE1 #1 shift 1111 1111 1111 1111 1111 1111 1110 [0001] only care abt last 4
-    dut.alu_op.value = ALU_SLL  #0110
+    dut.alu_op.value = ALU_SLL #0110
     await Timer(1, unit="ns")
     assert dut.result.value == 0x00000006, f"expected 0x00000006, got {dut.result.value.binstr}"
 
-    dut.alu_op.value = ALU_SRL  #0001
+    dut.alu_op.value = ALU_SRL #0001
     await Timer(1, unit="ns")
     assert dut.result.value == 0x40000001, f"expected 0x40000001, got {dut.result.value.binstr}"
 
-    dut.alu_op.value = ALU_SRA  #0001
+    dut.alu_op.value = ALU_SRA #0001
     await Timer(1, unit="ns")
     assert dut.result.value == 0xC0000001, f"expected 0xC0000001, got {dut.result.value.binstr}"
     pass
@@ -94,7 +94,7 @@ async def test_sra_sign_extension(dut):
 
     dut.alu_op.value = ALU_SRL
     await Timer(1, unit="ns")
-    assert dut.result.value == 0x40000000, f"expected 0x40000000 got {dut.result.value.binstr}" 
+    assert dut.result.value == 0x40000000, f"expected 0x40000000 got {dut.result.value.binstr}"
 
     pass
 
@@ -106,7 +106,7 @@ async def test_slt_vs_sltu(dut):
     dut.operand_b.value = 0x00000001
 
     dut.alu_op.value = ALU_SLT
-    await Timer(1, units="ns")  # Wait for combinational logic settling
+    await Timer(1, units="ns") # Wait for combinational logic settling
     assert dut.result.value == 1, f"expected 1, got {dut.result.value.integer}"
 
     dut.alu_op.value = ALU_SLTU
@@ -141,5 +141,5 @@ async def test_default_case(dut):
     await Timer(1, unit="ns")
     assert dut.result.value.integer == 0, f"expected 0, got {dut.result.value.integer}"
 
-    
+
     pass

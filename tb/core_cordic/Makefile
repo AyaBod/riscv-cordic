@@ -1,4 +1,4 @@
-# runs test_core_top.py against core_top with verilator. paths are relative to this file so a fresh clone just works
+# runs test_core_cordic.py against core_top with verilator. paths are relative to this file so a fresh clone just works
 SIM ?= verilator
 TOPLEVEL_LANG = verilog
 
@@ -11,7 +11,7 @@ VERILOG_SOURCES = $(SRC_DIR)/alu.sv $(SRC_DIR)/regfile.sv $(SRC_DIR)/imm_gen.sv 
                   $(SRC_DIR)/cordic.sv $(SRC_DIR)/core_top.sv
 
 TOPLEVEL = core_top
-MODULE = test_core_top
+MODULE = test_core_cordic
 
 # shared encoders/helpers live in tb/common
 export PYTHONPATH := $(TB_DIR)/../common:$(PYTHONPATH)

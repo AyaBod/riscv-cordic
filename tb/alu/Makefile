@@ -1,7 +1,10 @@
 SIM ?= verilator
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES = /home/ayanna/projects/riscv-cordic/src/alu.sv
+TB_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+SRC_DIR := $(TB_DIR)/../../src
+
+VERILOG_SOURCES = $(SRC_DIR)/alu.sv
 TOPLEVEL = alu
 MODULE = test_alu
 

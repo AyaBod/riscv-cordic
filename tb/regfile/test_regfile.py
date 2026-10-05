@@ -1,7 +1,7 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
-from cocotb.triggers import ReadOnly  #read is in comb block so happens instantly, wait till bits settle
+from cocotb.triggers import ReadOnly #read is in comb block so happens instantly, wait till bits settle
 
 
 async def reset_dut(dut):
@@ -25,7 +25,7 @@ async def test_reset_clears_all_regs(dut):
     await reset_dut(dut)
 
     for i in range(32): #0-31
-        dut.rs1_addr.value = i  
+        dut.rs1_addr.value = i
         assert int(dut.rs1_data.value) == 0, f"expected 0, got {dut.rs1_data.value}"
     pass
 
@@ -37,7 +37,7 @@ async def test_x0_always_reads_zero(dut):
     await reset_dut(dut)
 
     dut.rd_data.value = 0xDEADBEEF #haha
-    #rd_addr already set 
+    #rd_addr already set
     dut.we.value = 1
     await RisingEdge(dut.clk)
     dut.rs1_addr.value = 0
@@ -61,7 +61,7 @@ async def test_write_then_read(dut):
     dut.rs1_addr.value = 5
     await ReadOnly()
     assert dut.rs1_data.value == 0x12345678, f"expected 0x12345678, got {dut.rs1_data.value}"
-    
+
     pass
 
 
@@ -76,12 +76,12 @@ async def test_two_reads_simultaneously(dut):
     dut.rd_addr.value = 3
     dut.rd_data.value = 0xAAAA
     dut.we.value = 1
-    await RisingEdge(dut.clk)   #write
+    await RisingEdge(dut.clk) #write
     dut.we.value = 0
     dut.rd_addr.value = 7
     dut.rd_data.value = 0xBBBB
     dut.we.value = 1
-    await RisingEdge(dut.clk)   #write
+    await RisingEdge(dut.clk) #write
     dut.we.value = 0
 
     dut.rs1_addr.value = 3

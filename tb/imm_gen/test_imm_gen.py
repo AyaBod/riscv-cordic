@@ -27,7 +27,7 @@ async def test_itype_addi_negative(dut):
 @cocotb.test()
 async def test_stype_negative_offset(dut):
     """sw x2, -4(x1) - store with a negative offset, proves S-type reassembly + sign-extend."""
-    # -4 (12-bit: 111111111100) 
+    # -4 (12-bit: 111111111100)
     dut.instruction.value = 0xFE20AE23
     await Timer(1, unit="ns")
     assert dut.imm_out.value == 0xFFFFFFFC, f"expected 0xFFFFFFFC, got {dut.imm_out.value}" #-4 signed extended to 32 bits

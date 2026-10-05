@@ -1,14 +1,14 @@
+# standalone cordic unit tests, no cpu involved
 SIM ?= verilator
-TOPLEVEL_LANG ?= verilog
+TOPLEVEL_LANG = verilog
 
-# Point to your SystemVerilog source file
-VERILOG_SOURCES = /home/ayanna/projects/riscv-cordic/src/cordic.sv
+TB_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+SRC_DIR := $(TB_DIR)/../../src
 
-# Module name inside your cordic.sv file
+VERILOG_SOURCES = $(SRC_DIR)/cordic.sv
 TOPLEVEL = cordic
 MODULE = test_cordic
 
-# FIX: Waveform tracing flags + ignore minor style/width lint warnings
-EXTRA_ARGS += --trace --trace-structs -Wno-WIDTH -Wno-UNUSEDSIGNAL
+export PYTHONPATH := $(TB_DIR)/../common:$(PYTHONPATH)
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
