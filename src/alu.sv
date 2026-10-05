@@ -4,7 +4,7 @@
 module alu (
     input logic [31:0] operand_a,
     input logic [31:0] operand_b,
-    input logic [3:0] alu_op, //4 bits, room for 16 ops, 10 used
+    input logic [3:0] alu_op, //4 bits for 16 ops, 10 used
     output logic [31:0] result,
     output logic zero
 );
@@ -28,11 +28,11 @@ module alu (
             ALU_AND: result = operand_a & operand_b;
             ALU_OR: result = operand_a | operand_b;
             ALU_XOR: result = operand_a ^ operand_b;
-            ALU_SLL: result = operand_a << operand_b[4:0]; //only low 5 bits count as shamt
-            ALU_SRL: result = operand_a >> operand_b[4:0]; //zero fill
-            ALU_SRA: result = signed'(operand_a) >>> operand_b[4:0]; //sign fill
-            ALU_SLT: result = (signed'(operand_a) < signed'(operand_b)) ? 32'd1 : 32'd0;
-            ALU_SLTU: result = (operand_a < operand_b) ? 32'd1 : 32'd0;
+            ALU_SLL: result = operand_a << operand_b[4:0]; //logical left shift with bit select so only last 5 bits
+            ALU_SRL: result = operand_a >> operand_b[4:0]; //logical right shift, zero fill
+            ALU_SRA: result = signed'(operand_a) >>> operand_b[4:0]; //shift right arithmetic, sign fill
+            ALU_SLT: result = (signed'(operand_a) < signed'(operand_b)) ? 32'd1 : 32'd0; //set less than signed
+            ALU_SLTU: result = (operand_a < operand_b) ? 32'd1 : 32'd0; //set less than unsigned
             default: result = 32'd0;
         endcase
         zero = (result == 32'd0); //beq/bne read this off the sub

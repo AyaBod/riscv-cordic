@@ -4,11 +4,11 @@
 module imem #(
     parameter INIT_FILE = ""
 ) (
-    input logic [31:0] addr, //byte address from the pc
-    output logic [31:0] instruction
+    input logic [31:0] addr, //address for pc value (byte address)
+    output logic [31:0] instruction //fetched instruction
 );
 
-    logic [31:0] words [0:255];
+    logic [31:0] words [0:255]; //256 words that are 32 bits long
 
     initial begin
         if (INIT_FILE != "")
@@ -17,8 +17,10 @@ module imem #(
 
     //pc counts bytes, array counts words: drop the low 2 bits to get the word index
     //bits above 9 are ignored, so the pc wraps every 1 KB
-    logic [7:0] word_index;
-    assign word_index = addr[9:2];
+    logic [7:0] word_index; //256 words counter
+    //each instruction uses 4 bytes
+    assign word_index = addr[9:2]; //cutting off the last 2 bits gives the actual index
+    //dont need anything above 9 since this is for word counter index
     assign instruction = words[word_index];
 
 endmodule

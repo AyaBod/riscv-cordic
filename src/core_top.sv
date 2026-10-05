@@ -13,28 +13,29 @@ module core_top #(
     localparam logic [6:0] OPC_JAL = 7'b1101111;
     localparam logic [6:0] OPC_JALR = 7'b1100111;
     localparam logic [6:0] OPC_LOAD = 7'b0000011;
-    localparam logic [6:0] OPC_CUSTOM0 = 7'b0001011; //spec reserves custom-0 for vendor extensions, so cordic lives here
+    localparam logic [6:0] OPC_CUSTOM0 = 7'b0001011; //RV32I reserved custom-0 opcode, spec reserves it for vendor extensions so cordic lives here
 
     // ------------------------------------------------------------------
-    // pc
+    // pc registers
     // ------------------------------------------------------------------
     logic [31:0] pc_current;
     logic [31:0] pc_next;
 
     always_ff @(posedge clk or negedge rst_n) begin
-        if (!rst_n)
+        if (!rst_n) //active low
             pc_current <= 32'h0000_0000;
         else
             pc_current <= pc_next; //pc_next comes from the mux at the bottom
     end
 
+    //pc+4 is default path
     logic [31:0] pc_plus4;
     assign pc_plus4 = pc_current + 32'd4; //default path + jal/jalr link value
 
     // ------------------------------------------------------------------
-    // fetch
+    // instruction fetch
     // ------------------------------------------------------------------
-    logic [31:0] instruction;
+    logic [31:0] instruction; //when will we assgin if instr is from init file
 
     imem #(
         .INIT_FILE (IMEM_INIT_FILE)
@@ -44,7 +45,7 @@ module core_top #(
     );
 
     // ------------------------------------------------------------------
-    // decode: just slicing fields, every format puts them in the same spot
+    // decode for field extractin: just slicing fields, every format puts them in the same spot
     // ------------------------------------------------------------------
     logic [6:0] opcode;
     logic [4:0] rd_addr, rs1_addr, rs2_addr;
@@ -61,6 +62,7 @@ module core_top #(
     // ------------------------------------------------------------------
     // control + immediates
     // ------------------------------------------------------------------
+    //control
     logic reg_write, alu_src, mem_read, mem_write, mem_to_reg, is_branch, is_jump;
     logic [3:0] alu_op;
 
@@ -78,6 +80,7 @@ module core_top #(
         .is_jump(is_jump)
     );
 
+    //imm gen
     logic [31:0] imm;
     imm_gen u_imm_gen (
         .instruction(instruction), //imm_gen looks at opcode itself to pick the format
@@ -85,15 +88,15 @@ module core_top #(
     );
 
     // ------------------------------------------------------------------
-    // register file
+    // register file (reg file read)
     // ------------------------------------------------------------------
     logic [31:0] rs1_data, rs2_data;
     logic rd_we;
-    logic [31:0] rd_wdata; //driven by the writeback mux
+    logic [31:0] rd_wdata; //drive in writeback, driven by the writeback mux
 
     regfile u_regfile (
         .clk(clk),
-        .rst(~rst_n), //regfile wants active high, flip it here
+        .rst(~rst_n), //convert polaristy to match, regfile wants active high
         .we(rd_we),
         .rs1_addr(rs1_addr),
         .rs2_addr(rs2_addr),
@@ -104,7 +107,7 @@ module core_top #(
     );
 
     // ------------------------------------------------------------------
-    // cordic: second execution unit, sits next to the alu
+    // cordic implementation: second execution unit, sits next to the alu
     // ------------------------------------------------------------------
     // custom-0 encoding (r-type, funct7 = 0):
     // funct3[0] picks the mode: 1 = rotation (angle in rs1) 0 = vectoring (x = rs1, y = rs2)
@@ -127,10 +130,10 @@ module core_top #(
     logic signed [15:0] cordic_x_out, cordic_y_out, cordic_z_out;
 
     logic cordic_start;
-    assign cordic_start = cordic_op && !cordic_busy; //busy goes high the cycle after, so start is a one-cycle pulse
+    assign cordic_start = cordic_op && !cordic_busy; //will pulse exactly once on issue, busy goes high the cycle after
 
     logic core_stall;
-    assign core_stall = cordic_op && !cordic_done; //freezes the pc for the whole op, drops on the done cycle
+    assign core_stall = cordic_op && !cordic_done; //held through entire op, drops on done; freezes the pc the whole time
     //without this the pc moves every clock, the instruction word (and its rd/rs fields) changes under the
     //unit, and the next ~12 instructions run while cordic is still mid-calculation
 
@@ -166,13 +169,13 @@ module core_top #(
     assign rd_we = cordic_op ? cordic_done : reg_write;
 
     // ------------------------------------------------------------------
-    // alu
+    // alu op muxing
     // ------------------------------------------------------------------
     logic [31:0] operand_a, operand_b;
 
     always_comb begin
         case (opcode)
-            OPC_LUI: operand_a = 32'b0; //0 + imm = imm, reuses add instead of a new alu op
+            OPC_LUI: operand_a = 32'b0; //0 + imm = imm using existing ADD instead of a new alu op
             OPC_AUIPC: operand_a = pc_current; //pc + imm
             default: operand_a = rs1_data;
         endcase
@@ -192,7 +195,7 @@ module core_top #(
     );
 
     // ------------------------------------------------------------------
-    // branches: alu does the compare, this just reads the flag
+    // branch conditions: alu does the compare, this just reads the flag
     // ------------------------------------------------------------------
     logic branch_taken;
 
@@ -200,31 +203,31 @@ module core_top #(
         branch_taken = 1'b0;
         if (is_branch) begin
             case (funct3)
-                3'b000: branch_taken = alu_zero; //beq (sub == 0)
-                3'b001: branch_taken = ~alu_zero; //bne
-                3'b100: branch_taken = alu_result[0]; //blt (slt == 1)
-                3'b101: branch_taken = ~alu_result[0]; //bge
-                3'b110: branch_taken = alu_result[0]; //bltu (sltu == 1)
-                3'b111: branch_taken = ~alu_result[0]; //bgeu
+                3'b000: branch_taken = alu_zero; // BEQ (Zero == 1)
+                3'b001: branch_taken = ~alu_zero; // BNE (Zero == 0)
+                3'b100: branch_taken = alu_result[0]; // BLT (SLT result is 1)
+                3'b101: branch_taken = ~alu_result[0]; // BGE (Inverse of SLT)
+                3'b110: branch_taken = alu_result[0]; // BLTU (SLTU result is 1)
+                3'b111: branch_taken = ~alu_result[0]; // BGEU (Inverse of SLTU)
                 default: branch_taken = 1'b0;
             endcase
         end
     end
 
     // ------------------------------------------------------------------
-    // next pc
+    // next pc mux
     // ------------------------------------------------------------------
     logic [31:0] pc_branch_target, pc_jal_target, pc_jalr_target;
     assign pc_branch_target = pc_current + imm;
     assign pc_jal_target = pc_current + imm;
-    assign pc_jalr_target = alu_result & ~32'h1; //rs1 + imm with the lsb cleared, per spec
+    assign pc_jalr_target = alu_result & ~32'h1; //clear LSB per spec (rs1 + imm)
 
     always_comb begin
         if (core_stall)
-            pc_next = pc_current; //stall wins over everything, instruction stays put
+            pc_next = pc_current; //hold pc in place while cordic is cycling, stall wins over everything
         else if (is_jump && opcode == OPC_JALR)
             pc_next = pc_jalr_target;
-        else if (is_jump)
+        else if (is_jump) //jal
             pc_next = pc_jal_target;
         else if (is_branch && branch_taken)
             pc_next = pc_branch_target;
@@ -248,15 +251,15 @@ module core_top #(
     );
 
     // ------------------------------------------------------------------
-    // writeback
+    // writeback mux
     // ------------------------------------------------------------------
     always_comb begin
         case (opcode)
             OPC_JAL,
-            OPC_JALR: rd_wdata = pc_plus4; //link address
-            OPC_LOAD: rd_wdata = mem_read_data; //already extended by dmem
-            OPC_CUSTOM0: rd_wdata = {{16{cordic_result[15]}}, cordic_result}; //sign-extend the q3.13 result
-            default: rd_wdata = alu_result; //alu ops, lui, auipc
+            OPC_JALR: rd_wdata = pc_plus4; //JAL and JALR explicitly write back the sequential link target (PC+4)
+            OPC_LOAD: rd_wdata = mem_read_data; //load instructions explicitly write back aligned memory data, already extended by dmem
+            OPC_CUSTOM0: rd_wdata = {{16{cordic_result[15]}}, cordic_result}; //sign-extend 16-bit cordic result back up to 32 bits
+            default: rd_wdata = alu_result; //regular ALU ops, LUI, and AUIPC write back the ALU math stream
         endcase
     end
 

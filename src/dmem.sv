@@ -8,13 +8,13 @@ module dmem (
     input logic [31:0] write_data, //rs2
     input logic mem_read,
     input logic mem_write,
-    input logic [2:0] funct3, //[1:0] = size (b/h/w), [2] = unsigned for loads
+    input logic [2:0] funct3, //tells width and signed or nto: [1:0] = size (b/h/w), [2] = unsigned for loads
     output logic [31:0] read_data
 );
 
     localparam int BYTES = 1024;
 
-    logic [7:0] mem [0:BYTES-1];
+    logic [7:0] mem [0:BYTES-1]; //1024 bytes that are 8 bits long (standard)
 
     //range check covers the last byte too, so a word at 1022 doesn't spill into 0
     logic [31:0] last_byte;
@@ -35,18 +35,18 @@ module dmem (
     always_ff @(posedge clk) begin
         if (mem_write && in_range) begin
             case (funct3[1:0])
-                2'b00: mem[a] <= write_data[7:0]; //sb
-                2'b01: begin //sh
+                2'b00: mem[a] <= write_data[7:0]; //sb: store one byte, one byte is one index in mem
+                2'b01: begin //sh: store two bytes
                     mem[a] <= write_data[7:0];
                     mem[a + 10'd1] <= write_data[15:8];
                 end
-                2'b10: begin //sw
+                2'b10: begin //sw: store 4 bytes
                     mem[a] <= write_data[7:0];
                     mem[a + 10'd1] <= write_data[15:8];
                     mem[a + 10'd2] <= write_data[23:16];
                     mem[a + 10'd3] <= write_data[31:24];
                 end
-                default: ;
+                default: ; //nothing
             endcase
         end
     end
@@ -55,11 +55,11 @@ module dmem (
     always_comb begin
         if (mem_read && in_range) begin
             case (funct3)
-                3'b000: read_data = {{24{mem[a][7]}}, mem[a]}; //lb
-                3'b001: read_data = {{16{mem[a + 10'd1][7]}}, mem[a + 10'd1], mem[a]}; //lh
-                3'b010: read_data = {mem[a + 10'd3], mem[a + 10'd2], mem[a + 10'd1], mem[a]}; //lw
-                3'b100: read_data = {24'b0, mem[a]}; //lbu
-                3'b101: read_data = {16'b0, mem[a + 10'd1], mem[a]}; //lhu
+                3'b000: read_data = {{24{mem[a][7]}}, mem[a]}; //lb, byte signed
+                3'b001: read_data = {{16{mem[a + 10'd1][7]}}, mem[a + 10'd1], mem[a]}; //lh, halfword signed
+                3'b010: read_data = {mem[a + 10'd3], mem[a + 10'd2], mem[a + 10'd1], mem[a]}; //lw, word
+                3'b100: read_data = {24'b0, mem[a]}; //lbu, byte unsigned
+                3'b101: read_data = {16'b0, mem[a + 10'd1], mem[a]}; //lhu, halfword unsigned
                 default: read_data = 32'b0;
             endcase
         end else begin
