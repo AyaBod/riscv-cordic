@@ -49,30 +49,30 @@ def _j(imm, rd, opcode=0b1101111):
 # ---------------------------------------------------------------------------
 OP, OP_IMM, LOAD, STORE = 0b0110011, 0b0010011, 0b0000011, 0b0100011
 
-def add(rd, rs1, rs2):  return _r(0x00, rs2, rs1, 0b000, rd, OP)
-def sub(rd, rs1, rs2):  return _r(0x20, rs2, rs1, 0b000, rd, OP)
-def sll(rd, rs1, rs2):  return _r(0x00, rs2, rs1, 0b001, rd, OP)
-def slt(rd, rs1, rs2):  return _r(0x00, rs2, rs1, 0b010, rd, OP)
+def add(rd, rs1, rs2): return _r(0x00, rs2, rs1, 0b000, rd, OP)
+def sub(rd, rs1, rs2): return _r(0x20, rs2, rs1, 0b000, rd, OP)
+def sll(rd, rs1, rs2): return _r(0x00, rs2, rs1, 0b001, rd, OP)
+def slt(rd, rs1, rs2): return _r(0x00, rs2, rs1, 0b010, rd, OP)
 def sltu(rd, rs1, rs2): return _r(0x00, rs2, rs1, 0b011, rd, OP)
-def xor(rd, rs1, rs2):  return _r(0x00, rs2, rs1, 0b100, rd, OP)
-def srl(rd, rs1, rs2):  return _r(0x00, rs2, rs1, 0b101, rd, OP)
-def sra(rd, rs1, rs2):  return _r(0x20, rs2, rs1, 0b101, rd, OP)
-def or_(rd, rs1, rs2):  return _r(0x00, rs2, rs1, 0b110, rd, OP)
+def xor(rd, rs1, rs2): return _r(0x00, rs2, rs1, 0b100, rd, OP)
+def srl(rd, rs1, rs2): return _r(0x00, rs2, rs1, 0b101, rd, OP)
+def sra(rd, rs1, rs2): return _r(0x20, rs2, rs1, 0b101, rd, OP)
+def or_(rd, rs1, rs2): return _r(0x00, rs2, rs1, 0b110, rd, OP)
 def and_(rd, rs1, rs2): return _r(0x00, rs2, rs1, 0b111, rd, OP)
 
-def addi(rd, rs1, imm):  return _i(imm, rs1, 0b000, rd, OP_IMM)
-def slti(rd, rs1, imm):  return _i(imm, rs1, 0b010, rd, OP_IMM)
+def addi(rd, rs1, imm): return _i(imm, rs1, 0b000, rd, OP_IMM)
+def slti(rd, rs1, imm): return _i(imm, rs1, 0b010, rd, OP_IMM)
 def sltiu(rd, rs1, imm): return _i(imm, rs1, 0b011, rd, OP_IMM)
-def xori(rd, rs1, imm):  return _i(imm, rs1, 0b100, rd, OP_IMM)
-def ori(rd, rs1, imm):   return _i(imm, rs1, 0b110, rd, OP_IMM)
-def andi(rd, rs1, imm):  return _i(imm, rs1, 0b111, rd, OP_IMM)
-def slli(rd, rs1, sh):   return _i(sh & 0x1F, rs1, 0b001, rd, OP_IMM)
-def srli(rd, rs1, sh):   return _i(sh & 0x1F, rs1, 0b101, rd, OP_IMM)
-def srai(rd, rs1, sh):   return _i(0x400 | (sh & 0x1F), rs1, 0b101, rd, OP_IMM)   # imm[10] marks arithmetic
+def xori(rd, rs1, imm): return _i(imm, rs1, 0b100, rd, OP_IMM)
+def ori(rd, rs1, imm): return _i(imm, rs1, 0b110, rd, OP_IMM)
+def andi(rd, rs1, imm): return _i(imm, rs1, 0b111, rd, OP_IMM)
+def slli(rd, rs1, sh): return _i(sh & 0x1F, rs1, 0b001, rd, OP_IMM)
+def srli(rd, rs1, sh): return _i(sh & 0x1F, rs1, 0b101, rd, OP_IMM)
+def srai(rd, rs1, sh): return _i(0x400 | (sh & 0x1F), rs1, 0b101, rd, OP_IMM) # imm[10] marks arithmetic
 
-def lb(rd, rs1, imm):  return _i(imm, rs1, 0b000, rd, LOAD)
-def lh(rd, rs1, imm):  return _i(imm, rs1, 0b001, rd, LOAD)
-def lw(rd, rs1, imm):  return _i(imm, rs1, 0b010, rd, LOAD)
+def lb(rd, rs1, imm): return _i(imm, rs1, 0b000, rd, LOAD)
+def lh(rd, rs1, imm): return _i(imm, rs1, 0b001, rd, LOAD)
+def lw(rd, rs1, imm): return _i(imm, rs1, 0b010, rd, LOAD)
 def lbu(rd, rs1, imm): return _i(imm, rs1, 0b100, rd, LOAD)
 def lhu(rd, rs1, imm): return _i(imm, rs1, 0b101, rd, LOAD)
 
@@ -80,23 +80,23 @@ def sb(rs2, rs1, imm): return _s(imm, rs2, rs1, 0b000, STORE)
 def sh(rs2, rs1, imm): return _s(imm, rs2, rs1, 0b001, STORE)
 def sw(rs2, rs1, imm): return _s(imm, rs2, rs1, 0b010, STORE)
 
-def beq(rs1, rs2, off):  return _b(off, rs2, rs1, 0b000)
-def bne(rs1, rs2, off):  return _b(off, rs2, rs1, 0b001)
-def blt(rs1, rs2, off):  return _b(off, rs2, rs1, 0b100)
-def bge(rs1, rs2, off):  return _b(off, rs2, rs1, 0b101)
+def beq(rs1, rs2, off): return _b(off, rs2, rs1, 0b000)
+def bne(rs1, rs2, off): return _b(off, rs2, rs1, 0b001)
+def blt(rs1, rs2, off): return _b(off, rs2, rs1, 0b100)
+def bge(rs1, rs2, off): return _b(off, rs2, rs1, 0b101)
 def bltu(rs1, rs2, off): return _b(off, rs2, rs1, 0b110)
 def bgeu(rs1, rs2, off): return _b(off, rs2, rs1, 0b111)
 
-def lui(rd, imm20):   return _u(imm20, rd, 0b0110111)    # imm20 = the upper 20 bits, not pre-shifted
+def lui(rd, imm20): return _u(imm20, rd, 0b0110111) # imm20 = the upper 20 bits, not pre-shifted
 def auipc(rd, imm20): return _u(imm20, rd, 0b0010111)
-def jal(rd, off):     return _j(off, rd)
+def jal(rd, off): return _j(off, rd)
 def jalr(rd, rs1, imm): return _i(imm, rs1, 0b000, rd, 0b1100111)
 
-FENCE  = 0x0FF0000F       # fence iorw, iorw
-ECALL  = 0x00000073
+FENCE = 0x0FF0000F # fence iorw, iorw
+ECALL = 0x00000073
 EBREAK = 0x00100073
-NOP    = addi(0, 0, 0)
-HALT   = jal(0, 0)        # jump-to-self, parks the pc so programs never run off the end
+NOP = addi(0, 0, 0)
+HALT = jal(0, 0) # jump-to-self, parks the pc so programs never run off the end
 
 
 def load_const(rd, value):
@@ -105,7 +105,7 @@ def load_const(rd, value):
     value &= 0xFFFFFFFF
     upper = ((value + 0x800) >> 12) & 0xFFFFF
     lower = value - (upper << 12)
-    lower = ((lower + 0x800) & 0xFFF) - 0x800    # wrap into -2048..2047
+    lower = ((lower + 0x800) & 0xFFF) - 0x800 # wrap into -2048..2047
     return [lui(rd, upper), addi(rd, rd, lower)]
 
 
@@ -120,10 +120,10 @@ CORDIC_MNEMONICS = {F3_CORDIC_MAG: "cordic.mag", F3_CORDIC_COS: "cordic.cos",
 def encode_cordic(rd, rs1, rs2, funct3):
     return _r(0, rs2, rs1, funct3, rd, OPC_CUSTOM0)
 
-def cordic_cos(rd, rs1):        return encode_cordic(rd, rs1, 0, F3_CORDIC_COS)
-def cordic_sin(rd, rs1):        return encode_cordic(rd, rs1, 0, F3_CORDIC_SIN)
-def cordic_mag(rd, rs1, rs2):   return encode_cordic(rd, rs1, rs2, F3_CORDIC_MAG)
-def cordic_atan2(rd, rs1, rs2): return encode_cordic(rd, rs1, rs2, F3_CORDIC_ATAN2)   # rs1 = x, rs2 = y
+def cordic_cos(rd, rs1): return encode_cordic(rd, rs1, 0, F3_CORDIC_COS)
+def cordic_sin(rd, rs1): return encode_cordic(rd, rs1, 0, F3_CORDIC_SIN)
+def cordic_mag(rd, rs1, rs2): return encode_cordic(rd, rs1, rs2, F3_CORDIC_MAG)
+def cordic_atan2(rd, rs1, rs2): return encode_cordic(rd, rs1, rs2, F3_CORDIC_ATAN2) # rs1 = x, rs2 = y
 
 
 # ---------------------------------------------------------------------------

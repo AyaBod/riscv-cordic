@@ -9,9 +9,9 @@ ALU_OR = 0b0011
 ALU_XOR = 0b0100
 ALU_SLL = 0b0101
 ALU_SRL = 0b0110
-ALU_SRA = 0b0111 
+ALU_SRA = 0b0111
 ALU_SLT = 0b1000
-ALU_SLTU = 0b1001 
+ALU_SLTU = 0b1001
 
 @cocotb.test()
 async def test_rtype_add(dut):
@@ -29,7 +29,7 @@ async def test_rtype_add(dut):
     assert dut.mem_to_reg.value == 0
     assert dut.is_branch.value == 0
     assert dut.is_jump.value == 0
-        
+
     pass
 
 
@@ -39,7 +39,7 @@ async def test_rtype_sub(dut):
     #if add passes but sub fails funct 7 isnt being checked properly
     dut.opcode.value = 0b0110011
     dut.funct3.value = 0b000
-    dut.funct7.value = 0b0100000 
+    dut.funct7.value = 0b0100000
 
     await Timer(1, units="ns")
 
@@ -96,7 +96,7 @@ async def test_itype_srai_vs_srli(dut):
 async def test_load(dut):
     """lw: reg_write=1, alu_src=1, mem_read=1, mem_to_reg=1, mem_write=0"""
     dut.opcode.value = 0b0000011
-    dut.funct3.value = 0b010  #lw
+    dut.funct3.value = 0b010 #lw
     dut.funct7.value = 0b0000000
 
     await Timer(1, units="ns")
@@ -108,7 +108,7 @@ async def test_load(dut):
     assert dut.mem_write.value == 0
     assert dut.mem_to_reg.value == 1
     assert dut.is_branch.value == 0
-    assert dut.is_jump.value == 0 
+    assert dut.is_jump.value == 0
 
     pass
 
@@ -117,7 +117,7 @@ async def test_load(dut):
 async def test_store(dut):
     """sw: reg_write=0 (!), alu_src=1, mem_write=1, mem_read=0"""
     dut.opcode.value = 0b0100011
-    dut.funct3.value = 0b010  #sw
+    dut.funct3.value = 0b010 #sw
     dut.funct7.value = 0b0000000
 
     await Timer(1, units="ns")
@@ -172,7 +172,7 @@ async def test_jal(dut):
 @cocotb.test()
 async def test_default_unused_opcode(dut):
     """Unused opcode -> everything falls back to safe defaults, no latch."""
-    dut.opcode.value = 0b1111111 
+    dut.opcode.value = 0b1111111
     dut.funct3.value = 0b111
     dut.funct7.value = 0b1111111
     await Timer(1, units="ns")

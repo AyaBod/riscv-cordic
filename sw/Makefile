@@ -2,7 +2,7 @@
 # works with riscv64-unknown-elf-, riscv32-unknown-elf- or riscv-none-elf- toolchains
 PREFIX ?= $(shell for p in riscv64-unknown-elf- riscv32-unknown-elf- riscv-none-elf-; do \
             command -v $${p}gcc >/dev/null 2>&1 && echo $$p && break; done)
-CC      = $(PREFIX)gcc
+CC = $(PREFIX)gcc
 OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
 

@@ -1,7 +1,7 @@
 # top-level: `make test` builds the c program and runs every testbench
 # cocotb doesn't always fail make on a failing test, so this greps each results.xml for <failure
 
-TB_DIRS = $(patsubst %/Makefile,%,$(wildcard tb/*/Makefile))   # picks up any tb/<dir> with a Makefile
+TB_DIRS = $(patsubst %/Makefile,%,$(wildcard tb/*/Makefile)) # picks up any tb/<dir> with a Makefile
 
 test: sw
 	@fail=0; for d in $(TB_DIRS); do \

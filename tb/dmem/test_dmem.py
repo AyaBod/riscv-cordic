@@ -3,12 +3,12 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, Timer
 
 
-# input  logic clk,
-# input  logic [31:0] addr,
-# input  logic [31:0] write_data,
-# input  logic mem_read,
-# input  logic mem_write,
-# input  logic [2:0]  funct3, //tells width and signed or nto
+# input logic clk,
+# input logic [31:0] addr,
+# input logic [31:0] write_data,
+# input logic mem_read,
+# input logic mem_write,
+# input logic [2:0] funct3, //tells width and signed or nto
 # output logic [31:0] read_data
 
 
@@ -26,10 +26,10 @@ async def test_sw_then_lw(dut):
     #write is in always ff
     await RisingEdge(dut.clk)
 
-    dut.mem_write.value = 0 
+    dut.mem_write.value = 0
 
     #bc of gating
-    dut.mem_read.value = 1 #addr and funct3 should  stay the same no chnages
+    dut.mem_read.value = 1 #addr and funct3 should stay the same no chnages
     await Timer(1, unit="ns") #bc comb not ff
     assert dut.read_data.value == 0x12345678, f"expected 0x12345678, got {dut.read_data.value}"
 
@@ -45,16 +45,16 @@ async def test_sb_then_lb_positive(dut):
     dut.addr.value = 5
     dut.write_data.value = 23
     dut.mem_read.value = 0
-    dut.funct3.value = 0b000  #store byte and load byte signed
+    dut.funct3.value = 0b000 #store byte and load byte signed
     dut.mem_write.value = 1
 
     #write is in always ff
     await RisingEdge(dut.clk)
 
-    dut.mem_write.value = 0 
+    dut.mem_write.value = 0
 
     #bc of gating
-    dut.mem_read.value = 1 #addr and funct3 should  stay the same no chnages
+    dut.mem_read.value = 1 #addr and funct3 should stay the same no chnages
     await Timer(1, unit="ns") #bc comb not ff
     assert dut.read_data.value == 23, f"expected 23, got {dut.read_data.value}"
 
@@ -70,16 +70,16 @@ async def test_sb_then_lb_negative(dut):
     dut.addr.value = 6
     dut.write_data.value = 0x80
     dut.mem_read.value = 0
-    dut.funct3.value = 0b000  #store byte and load byte signed
+    dut.funct3.value = 0b000 #store byte and load byte signed
     dut.mem_write.value = 1
 
     #write is in always ff
     await RisingEdge(dut.clk)
 
-    dut.mem_write.value = 0 
+    dut.mem_write.value = 0
 
     #bc of gating
-    dut.mem_read.value = 1 #addr and funct3 should  stay the same no chnages
+    dut.mem_read.value = 1 #addr and funct3 should stay the same no chnages
     await Timer(1, unit="ns") #bc comb not ff
     assert dut.read_data.value == 0xFFFFFF80, f"expected 0x80, got {dut.read_data.value}"
 
@@ -95,17 +95,17 @@ async def test_sb_then_lbu(dut):
     dut.addr.value = 7
     dut.write_data.value = 0xFF #another neg byte
     dut.mem_read.value = 0
-    dut.funct3.value = 0b000  #store byte and load byte signed
+    dut.funct3.value = 0b000 #store byte and load byte signed
     dut.mem_write.value = 1
 
     #write is in always ff
     await RisingEdge(dut.clk)
 
-    dut.mem_write.value = 0 
+    dut.mem_write.value = 0
 
     #bc of gating
     dut.funct3.value = 0b100 #load unsigned byte
-    dut.mem_read.value = 1 #addr should  stay the same no chnages
+    dut.mem_read.value = 1 #addr should stay the same no chnages
     await Timer(1, unit="ns") #bc comb not ff
     assert dut.read_data.value == 0x000000FF, f"expected 0xFF, got {dut.read_data.value}"
     pass
@@ -121,16 +121,16 @@ async def test_sh_then_lh_negative(dut):
     dut.addr.value = 8
     dut.write_data.value = 65000
     dut.mem_read.value = 0
-    dut.funct3.value = 0b001  #store halfword and load halfword signed
+    dut.funct3.value = 0b001 #store halfword and load halfword signed
     dut.mem_write.value = 1
 
     #write is in always ff
     await RisingEdge(dut.clk)
 
-    dut.mem_write.value = 0 
+    dut.mem_write.value = 0
 
     #bc of gating
-    dut.mem_read.value = 1 #addr and funct3 should  stay the same no chnages
+    dut.mem_read.value = 1 #addr and funct3 should stay the same no chnages
     await Timer(1, unit="ns") #bc comb not ff
     assert dut.read_data.value == 0xFFFFFDE8, f"expected 0xFFFFFDE8, got {dut.read_data.value}"
     pass
@@ -147,13 +147,13 @@ async def test_byte_doesnt_disturb_neighbors(dut):
     dut.addr.value = 14
     dut.write_data.value = 0x12345678
     dut.mem_read.value = 0
-    dut.funct3.value = 0b010  #store word
+    dut.funct3.value = 0b010 #store word
     dut.mem_write.value = 1
 
     #write is in always ff
     await RisingEdge(dut.clk)
 
-    dut.mem_write.value = 0 
+    dut.mem_write.value = 0
 
     await RisingEdge(dut.clk)
 
@@ -169,7 +169,7 @@ async def test_byte_doesnt_disturb_neighbors(dut):
     #bc of gating
     dut.addr.value = 14
     dut.funct3.value = 0b010 #read corrupted word
-    dut.mem_read.value = 1 
+    dut.mem_read.value = 1
     await Timer(1, unit="ns") #bc comb not ff
     assert dut.read_data.value == 0x12340578 , f"expected 0x12340578 , got {dut.read_data.value}"
 
@@ -191,10 +191,10 @@ async def test_mem_write_disabled(dut):
     #write is in always ff
     await RisingEdge(dut.clk)
 
-    dut.mem_write.value = 0 
+    dut.mem_write.value = 0
 
     #bc of gating
-    dut.mem_read.value = 1 #addr and funct3 should  stay the same no chnages
+    dut.mem_read.value = 1 #addr and funct3 should stay the same no chnages
     await Timer(1, unit="ns") #bc comb not ff
     assert dut.read_data.value == 0, f"expected 0, got {dut.read_data.value}"
 
@@ -217,7 +217,7 @@ async def test_mem_read_disabled(dut):
     #write is in always ff
     await RisingEdge(dut.clk)
 
-    dut.mem_write.value = 0 
+    dut.mem_write.value = 0
 
     #bc of gating
     dut.mem_read.value = 0 #test if itll still read if mem read is off

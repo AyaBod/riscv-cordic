@@ -6,7 +6,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tb", "common"))
-from rv32i import OPC_CUSTOM0, CORDIC_MNEMONICS, encode_cordic   # noqa: E402
+from rv32i import OPC_CUSTOM0, CORDIC_MNEMONICS, encode_cordic # noqa: E402
 
 def main(hexfile):
     found = 0

@@ -12,8 +12,8 @@ from cocotb.triggers import FallingEdge
 from rv32i import *
 
 ITER = 12
-STALL_CYCLES = ITER + 1        # start cycle + 12 iterate cycles, core_stall high the whole time
-OCCUPANCY = STALL_CYCLES + 1   # plus the done cycle where the write commits and the pc moves on
+STALL_CYCLES = ITER + 1 # start cycle + 12 iterate cycles, core_stall high the whole time
+OCCUPANCY = STALL_CYCLES + 1 # plus the done cycle where the write commits and the pc moves on
 
 ANGLES = [-1.5, -0.7, 0.0, 0.3, 0.9, 1.5]
 VECTORS = [(0.5, 0.0), (0.5, 0.5), (0.5, -0.5), (1.0, 0.25), (0.3, -0.9), (1.5, 1.5), (0.1, 0.1)]
@@ -22,7 +22,7 @@ VECTORS = [(0.5, 0.0), (0.5, 0.5), (0.5, -0.5), (1.0, 0.25), (0.3, -0.9), (1.5, 
 async def run_cordic_case(dut, instr, a_val, b_val=0.0, rd=3):
     """x1 = a, x2 = b, run one cordic instruction into rd, then a marker addi that must run exactly once"""
     program = load_const(1, to_fixed(a_val)) + load_const(2, to_fixed(b_val))
-    program += [instr(rd), addi(4, 4, 7)]       # addi x4 += 7: phantom re-execution would make it 14+
+    program += [instr(rd), addi(4, 4, 7)] # addi x4 += 7: phantom re-execution would make it 14+
     load_program(dut, program)
     await reset_dut(dut)
     await run_cycles(dut, 4 + OCCUPANCY + 4)
@@ -69,9 +69,9 @@ async def test_cordic_stall_and_commit_timing(dut):
     """pc parks on the cordic instruction for the whole op, rd stays untouched until the done cycle,
     and the very next cycle the following instruction runs with the result already visible"""
     start_clock(dut)
-    prog = load_const(1, to_fixed(0.5))          # 0x0, 0x4
-    cordic_pc = 4 * len(prog)                    # 0x8
-    prog += [cordic_cos(3, 1), add(5, 3, 0)]     # 0x8, 0xC
+    prog = load_const(1, to_fixed(0.5)) # 0x0, 0x4
+    cordic_pc = 4 * len(prog) # 0x8
+    prog += [cordic_cos(3, 1), add(5, 3, 0)] # 0x8, 0xC
     load_program(dut, prog)
     await reset_dut(dut)
 
@@ -100,7 +100,7 @@ async def test_cordic_back_to_back_and_dependent(dut):
     start_clock(dut)
     t = 0.6
     prog = load_const(1, to_fixed(t)) + [cordic_cos(3, 1), cordic_sin(4, 1), add(5, 3, 4),
-                                         cordic_mag(6, 3, 4)]   # chained: mag(cos, sin) should be ~1
+                                         cordic_mag(6, 3, 4)] # chained: mag(cos, sin) should be ~1
     await boot(dut, prog, 2 + 3 * OCCUPANCY + 6)
     c, s = from_fixed(get_reg_signed(dut, 3)), from_fixed(get_reg_signed(dut, 4))
     assert abs(c - math.cos(t)) < 0.002 and abs(s - math.sin(t)) < 0.002

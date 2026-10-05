@@ -4,7 +4,7 @@
 module imem #(
     parameter INIT_FILE = ""
 ) (
-    input  logic [31:0] addr,         //byte address from the pc
+    input logic [31:0] addr, //byte address from the pc
     output logic [31:0] instruction
 );
 
@@ -12,13 +12,13 @@ module imem #(
 
     initial begin
         if (INIT_FILE != "")
-            $readmemh(INIT_FILE, words);     //one 32-bit hex word per line, same format sw/hexgen.py writes
+            $readmemh(INIT_FILE, words); //one 32-bit hex word per line, same format sw/hexgen.py writes
     end
 
     //pc counts bytes, array counts words: drop the low 2 bits to get the word index
     //bits above 9 are ignored, so the pc wraps every 1 KB
     logic [7:0] word_index;
-    assign word_index  = addr[9:2];
+    assign word_index = addr[9:2];
     assign instruction = words[word_index];
 
 endmodule

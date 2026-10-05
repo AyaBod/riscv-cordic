@@ -10,7 +10,7 @@ from cocotb.triggers import FallingEdge
 from rv32i import *
 
 HEX = os.path.join(os.path.dirname(__file__), "..", "..", "sw", "build", "prog.hex")
-HALT_PC = 0x8            # crt0's jump-to-self
+HALT_PC = 0x8 # crt0's jump-to-self
 OUT = 0x100
 DONE_MAGIC = 0xC0DE
 TOL = 0.006
@@ -26,7 +26,7 @@ async def test_c_program(dut):
     words = [int(l, 16) for l in open(HEX) if l.strip()]
 
     start_clock(dut)
-    load_program(dut, words, halt=False)      # crt0 already has its own halt loop
+    load_program(dut, words, halt=False) # crt0 already has its own halt loop
     clear_dmem(dut)
     await reset_dut(dut)
 
@@ -49,7 +49,7 @@ async def test_c_program(dut):
         12: ("|(cos 1, sin 1)|", 1.0),
     }
     for k in range(8):
-        a = to_fixed(-1.4) + k * to_fixed(0.4)       # same fixed-point stepping the c loop does
+        a = to_fixed(-1.4) + k * to_fixed(0.4) # same fixed-point stepping the c loop does
         expected[4 + k] = (f"sin({from_fixed(a):+.2f})", math.sin(from_fixed(a)))
 
     for idx, (name, ref) in sorted(expected.items()):

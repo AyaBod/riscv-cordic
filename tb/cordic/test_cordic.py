@@ -38,7 +38,7 @@ async def run_op(dut, mode, x, y, z):
         cycles += 1
         assert cycles < 50, "done never came"
     out = tuple(from_fixed(to_s16(int(s.value))) for s in (dut.x_out, dut.y_out, dut.z_out))
-    await FallingEdge(dut.clk)                 # let it drop back to IDLE
+    await FallingEdge(dut.clk) # let it drop back to IDLE
     return out, cycles
 
 
@@ -58,7 +58,7 @@ async def test_handshake_timing(dut):
         busy_cycles += int(dut.busy.value)
         done_cycles += int(dut.done.value)
         await FallingEdge(dut.clk)
-    assert busy_cycles == ITER + 1, f"busy for {busy_cycles} cycles"   # 12 iterate + 1 done
+    assert busy_cycles == ITER + 1, f"busy for {busy_cycles} cycles" # 12 iterate + 1 done
     assert done_cycles == 1, "done should pulse exactly once"
     assert int(dut.busy.value) == 0, "didn't return to idle"
 

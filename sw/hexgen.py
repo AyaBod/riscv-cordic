@@ -7,8 +7,8 @@ IMEM_WORDS = 256
 
 def main(src, dst):
     data = open(src, "rb").read()
-    data += b"\x00" * (-len(data) % 4)                      # pad to a whole word
-    words = struct.unpack(f"<{len(data) // 4}I", data)      # riscv is little endian
+    data += b"\x00" * (-len(data) % 4) # pad to a whole word
+    words = struct.unpack(f"<{len(data) // 4}I", data) # riscv is little endian
     assert len(words) <= IMEM_WORDS, f"program is {len(words)} words, imem only holds {IMEM_WORDS}"
     with open(dst, "w") as f:
         for w in words:

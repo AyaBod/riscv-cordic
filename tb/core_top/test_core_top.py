@@ -40,7 +40,7 @@ async def test_reset(dut):
     start_clock(dut)
     load_program(dut, [addi(i, 0, i) for i in range(1, 8)])
     await reset_dut(dut)
-    await run_cycles(dut, 8)          # dirty the regfile first
+    await run_cycles(dut, 8) # dirty the regfile first
     await reset_dut(dut)
     assert get_pc(dut) == 0
     for i in range(32):
@@ -52,7 +52,7 @@ async def test_pc_increment(dut):
     """non-control instructions advance the pc by exactly 4 per clock"""
     start_clock(dut)
     load_program(dut, [NOP] * 8)
-    await reset_dut(dut)              # returns on the falling edge where reset lets go, pc still 0
+    await reset_dut(dut) # returns on the falling edge where reset lets go, pc still 0
     for i in range(6):
         assert get_pc(dut) == 4 * i, f"cycle {i}: pc {get_pc(dut):#x}"
         await FallingEdge(dut.clk)
@@ -80,7 +80,7 @@ async def test_auipc(dut):
 # ---------------------------------------------------------------------------
 # r-type alu ops (rs1 op rs2 -> rd)
 # ---------------------------------------------------------------------------
-A, B, NEG = 0xF0F0A5A5, 0x00000023, 0xFFFFFFF6   # B = 35 so shifts must mask to shamt 3; NEG = -10
+A, B, NEG = 0xF0F0A5A5, 0x00000023, 0xFFFFFFF6 # B = 35 so shifts must mask to shamt 3; NEG = -10
 
 def rtype_program(ops):
     prog = load_const(1, A) + load_const(2, B) + load_const(6, NEG)
@@ -188,7 +188,7 @@ async def run_branch_cases(dut, a, b, cases):
     """cases: list of (branch_fn, should_take). marker regs 10.. get 1 only if the branch fell through"""
     prog = load_const(1, a) + load_const(2, b)
     for k, (fn, _) in enumerate(cases):
-        prog += [fn(1, 2, 8), addi(10 + k, 0, 1)]     # taken -> jumps over the marker
+        prog += [fn(1, 2, 8), addi(10 + k, 0, 1)] # taken -> jumps over the marker
     await boot(dut, prog, len(prog) + 4)
     for k, (fn, take) in enumerate(cases):
         assert get_reg(dut, 10 + k) == (0 if take else 1), f"{fn.__name__}({a:#x},{b:#x}) taken={not take}"
@@ -221,10 +221,10 @@ async def test_bltu_bgeu(dut):
 async def test_branch_backward_loop(dut):
     """negative branch offset: count x1 up to 5"""
     start_clock(dut)
-    prog = [addi(2, 0, 5),        # 0x0
-            addi(1, 1, 1),        # 0x4  <- loop
-            bne(1, 2, -4),        # 0x8
-            addi(3, 0, 99)]       # 0xC  runs once after the loop
+    prog = [addi(2, 0, 5), # 0x0
+            addi(1, 1, 1), # 0x4 <- loop
+            bne(1, 2, -4), # 0x8
+            addi(3, 0, 99)] # 0xC runs once after the loop
     await boot(dut, prog, 20)
     check(dut, 1, 5, "loop counter")
     check(dut, 3, 99, "after loop")
@@ -238,7 +238,7 @@ async def test_branch_backward_loop(dut):
 async def test_jal(dut):
     """jal skips forward and writes pc+4 into rd"""
     start_clock(dut)
-    prog = [NOP, jal(1, 8), addi(2, 0, 1), addi(3, 0, 7)]   # jal at 0x4 -> 0xC
+    prog = [NOP, jal(1, 8), addi(2, 0, 1), addi(3, 0, 7)] # jal at 0x4 -> 0xC
     await boot(dut, prog, 5)
     check(dut, 1, 0x8, "jal link")
     check(dut, 2, 0, "skipped instruction ran")
@@ -249,12 +249,12 @@ async def test_jal(dut):
 async def test_jalr(dut):
     """jalr jumps to rs1+imm with the lsb cleared and writes pc+4"""
     start_clock(dut)
-    prog = [addi(5, 0, 0x11),     # 0x0  odd base on purpose
-            jalr(1, 5, 3),        # 0x4  0x11 + 3 = 0x14 (lsb already clear)
-            addi(2, 0, 1),        # 0x8  skipped
-            addi(2, 0, 2),        # 0xC  skipped
-            addi(2, 0, 3),        # 0x10 skipped
-            jalr(4, 5, 0),        # 0x14 0x11 -> 0x10 once the lsb is cleared, so it bounces back
+    prog = [addi(5, 0, 0x11), # 0x0 odd base on purpose
+            jalr(1, 5, 3), # 0x4 0x11 + 3 = 0x14 (lsb already clear)
+            addi(2, 0, 1), # 0x8 skipped
+            addi(2, 0, 2), # 0xC skipped
+            addi(2, 0, 3), # 0x10 skipped
+            jalr(4, 5, 0), # 0x14 0x11 -> 0x10 once the lsb is cleared, so it bounces back
             ]
     await boot(dut, prog, 6)
     check(dut, 1, 0x8, "jalr link")
@@ -330,9 +330,9 @@ async def test_out_of_range_memory(dut):
     start_clock(dut)
     clear_dmem(dut)
     prog = (load_const(1, 0xCAFEF00D) + [sw(1, 0, 0x0)]
-            + load_const(2, 0x400)                     # 1024: first byte past the end, aliases to 0 if unchecked
-            + [sw(2, 2, 0), lw(3, 2, 0),               # out-of-range store + load
-               sw(2, 0, 0x3FE),                        # word that would straddle the end (1022..1025)
+            + load_const(2, 0x400) # 1024: first byte past the end, aliases to 0 if unchecked
+            + [sw(2, 2, 0), lw(3, 2, 0), # out-of-range store + load
+               sw(2, 0, 0x3FE), # word that would straddle the end (1022..1025)
                lw(4, 0, 0x0), lw(6, 0, 0x3FC), addi(5, 0, 1)])
     await boot(dut, prog, 14)
     check(dut, 3, 0, "out-of-range load")
@@ -383,18 +383,18 @@ async def test_integration_sum_program(dut):
     """small real program: sum 1..10 in a loop, store it, load it back, compare with a branch"""
     start_clock(dut)
     clear_dmem(dut)
-    prog = [addi(1, 0, 0),        # 0x00 sum = 0
-            addi(2, 0, 1),        # 0x04 i = 1
-            addi(3, 0, 11),       # 0x08 limit
-            add(1, 1, 2),         # 0x0C <- loop: sum += i
-            addi(2, 2, 1),        # 0x10 i++
-            blt(2, 3, -8),        # 0x14 while i < 11
-            sw(1, 0, 0x200),      # 0x18
-            lw(4, 0, 0x200),      # 0x1C
-            addi(5, 0, 55),       # 0x20
-            beq(4, 5, 8),         # 0x24 skip the fail marker if it matches
-            addi(6, 0, -1),       # 0x28 fail marker
-            addi(7, 0, 1)]        # 0x2C pass marker
+    prog = [addi(1, 0, 0), # 0x00 sum = 0
+            addi(2, 0, 1), # 0x04 i = 1
+            addi(3, 0, 11), # 0x08 limit
+            add(1, 1, 2), # 0x0C <- loop: sum += i
+            addi(2, 2, 1), # 0x10 i++
+            blt(2, 3, -8), # 0x14 while i < 11
+            sw(1, 0, 0x200), # 0x18
+            lw(4, 0, 0x200), # 0x1C
+            addi(5, 0, 55), # 0x20
+            beq(4, 5, 8), # 0x24 skip the fail marker if it matches
+            addi(6, 0, -1), # 0x28 fail marker
+            addi(7, 0, 1)] # 0x2C pass marker
     await boot(dut, prog, 60)
     check(dut, 1, 55, "sum")
     check(dut, 4, 55, "stored/loaded sum")
